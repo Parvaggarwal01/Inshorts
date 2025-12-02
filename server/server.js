@@ -47,4 +47,10 @@ app.get('/', (req, res) => {
   res.send('Server is running');
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Start server - bind to 0.0.0.0 for container deployment
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+}).on('error', (err) => {
+  console.error('Server failed to start:', err);
+  process.exit(1);
+});
