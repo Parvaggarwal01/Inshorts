@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
 
 // Create announcement (Teacher only)
 router.post('/', async (req, res) => {
-  const { title, description, tags, authorId, category } = req.body;
+  const { title, description, tags, authorId, category, summary: manualSummary } = req.body;
   
   if (!title || !description || !authorId) {
     return res.status(400).json({ message: 'Title, description, and authorId are required' });
@@ -27,7 +27,8 @@ router.post('/', async (req, res) => {
 
   try {
     // Generate AI content
-    const summary = await generateSummary(description);
+    // Use manual summary if provided, otherwise generate
+    const summary = manualSummary || await generateSummary(description);
     const imageUrl = await generateImage(title, tags);
 
     const newAnnouncement = new Announcement({
@@ -49,7 +50,7 @@ router.post('/', async (req, res) => {
 
 // Update announcement
 router.put('/:id', async (req, res) => {
-  const { title, description, tags, category } = req.body;
+  const { title, description, tags, category, summary: manualSummary } = req.body;
   try {
     const announcement = await Announcement.findById(req.params.id);
     if (!announcement) return res.status(404).json({ message: 'Announcement not found' });
@@ -57,9 +58,15 @@ router.put('/:id', async (req, res) => {
     let summary = announcement.summary;
     let imageUrl = announcement.imageUrl;
 
-    // Regenerate summary if description changed
-    if (description && description !== announcement.originalDescription) {
+    // Regenerate summary if description changed AND no manual summary provided
+    // If manual summary is provided AND it's different from the old one, use it.
+    if (manualSummary && manualSummary !== announcement.summary) {
+      summary = manualSummary;
+    } else if (description && description !== announcement.originalDescription) {
       summary = await generateSummary(description);
+    } else if (manualSummary === "") {
+      // User explicitly cleared the summary, force regenerate
+      summary = await generateSummary(description || announcement.originalDescription);
     }
 
     // Regenerate image if title or tags changed

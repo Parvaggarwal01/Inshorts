@@ -7,6 +7,7 @@ const TeacherDashboard = () => {
   const [announcements, setAnnouncements] = useState([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [summary, setSummary] = useState('');
   const [tags, setTags] = useState(['', '', '']);
   const [category, setCategory] = useState('All');
   const [loading, setLoading] = useState(false);
@@ -43,6 +44,7 @@ const TeacherDashboard = () => {
   const resetForm = () => {
     setTitle('');
     setDescription('');
+    setSummary('');
     setTags(['', '', '']);
     setCategory('All');
     setEditingId(null);
@@ -51,7 +53,9 @@ const TeacherDashboard = () => {
 
   const handleEdit = (item) => {
     setTitle(item.title);
+    setTitle(item.title);
     setDescription(item.originalDescription);
+    setSummary(item.summary);
     // Ensure 3 tags
     const currentTags = item.tags || [];
     setTags([
@@ -84,6 +88,7 @@ const TeacherDashboard = () => {
         await axios.put(`http://localhost:5001/api/announcements/${editingId}`, { 
           title, 
           description, 
+          summary,
           tags: cleanTags,
           category
         });
@@ -92,6 +97,7 @@ const TeacherDashboard = () => {
         await axios.post('http://localhost:5001/api/announcements', { 
           title, 
           description, 
+          summary,
           tags: cleanTags,
           category,
           authorId: user.id
@@ -195,6 +201,17 @@ const TeacherDashboard = () => {
                       placeholder="Enter the full details of the announcement..."
                       required
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">AI Summary (Editable)</label>
+                    <textarea
+                      value={summary}
+                      onChange={(e) => setSummary(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none h-24 resize-none bg-gray-50 focus:bg-white"
+                      placeholder="AI generated summary will appear here. You can edit it manually."
+                    />
+                    <p className="text-xs text-gray-400 mt-2">Leave empty to auto-generate from description.</p>
                   </div>
 
                   <div className="flex justify-end pt-4">
